@@ -1,0 +1,3 @@
+main_OpenProject("/Users/michael/Library/Application Support/REAPER/ProjectTemplates/Quartet.RPP");
+SetOnlyTrackSelected( GetTrack (0,0) );
+InsertMedia("/tmp/Quartet.mid",0)

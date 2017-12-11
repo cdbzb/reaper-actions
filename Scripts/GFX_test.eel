@@ -1,0 +1,69 @@
+function ShowToolbar()
+(
+
+//gfx_setfont(2,"Geneva",2);
+
+GetExtState(toolbar,"toolbars","active");
+
+gfx_init(toolbar,240,240);
+
+
+GetExtState(#label1,toolbar,"101");
+GetExtState(#label2,toolbar,"102");
+GetExtState(#label3,toolbar,"103");
+
+
+GetExtState(#label4,toolbar,"104");
+GetExtState(#label5,toolbar,"105");
+GetExtState(#label6,toolbar,"106");
+GetExtState(#labelp,toolbar,"10+");
+
+
+GetExtState(#label7,toolbar,"107");
+GetExtState(#label8,toolbar,"108");
+GetExtState(#label9,toolbar,"109");
+GetExtState(#labelm,toolbar,"10-");
+
+gfx_x=20;
+gfx_y=20;
+tab=10;
+htab=45;
+vtab=20;
+
+
+
+gfx_x  = htab;
+gfx_drawstr(#label7);
+gfx_x = 2* htab;
+gfx_drawstr(#label8);
+gfx_x = 3*htab;
+gfx_drawstr(#label9);
+gfx_x = 4*htab;
+gfx_drawstr(#labelm);
+
+gfx_y+=vtab;
+
+gfx_x  = htab;
+gfx_drawstr(#label4);
+gfx_x = 2* htab;
+gfx_drawstr(#label5);
+gfx_x = 3*htab;
+gfx_drawstr(#label6);
+gfx_x = 4*htab;
+gfx_drawstr(#labelp);
+
+gfx_y+=vtab;
+
+gfx_x  = htab;
+gfx_drawstr(#label1);
+gfx_x = 2* htab;
+gfx_drawstr(#label2);
+gfx_x = 3* htab;
+gfx_drawstr(#label3);
+gfx_update();
+defer("ShowToolbar();")
+);
+
+ShowToolbar();
+
+

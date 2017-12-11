@@ -1,0 +1,4 @@
+SelectedItem = GetSelectedMediaItem(0,0);
+CurrentTake = GetMediaItemTake(SelectedItem,0);
+MidiFile = "/Volumes/Zippy/puddle,All That Fall Lilypond Scores/6_Fitt.mid";
+extension_api("BR_SetTakeSourceFromFile",CurrentTake,MidiFile,0);

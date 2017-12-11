@@ -1,0 +1,1001 @@
+/**
+ * ReaScript Name: Notes Reader 
+ * Description: Reads item's notes and displays them as subtitles in a window.
+ * Instructions: 
+   Create a Track with items (empty items preferred), with notes in them.
+   Run script. To change which track contains the items, select the track, right click on the script window
+   to option the options, and select the track id string "button". It will define the track with your selected track.
+   Play and see how the item notes appear on the window. Resize the window or move it to fit your needs.
+   In REAPER 5 you can dock it to any docker you want and it will remember its position. Right click on the title bar and select dock.
+   You can select a folder track and set the Reader to read from the track and its children. 
+   for now, it will have some options disabled for multi track reading. 
+   
+   Customizable colors in the text notes:
+   Background color: Enter <background="#33AA55" /> as the last line of the note. #33AA55 is a color like in HTML standard.
+   To customize background without text. Enter a blank line first.
+   Formatting text:
+      Bold – <b> ... </b> 
+      Italic – <i> ... </i>
+      Underline – <u> ... </u> 
+      Font color – <font color="#code"> ... </font>   
+
+ * Author: HeDa
+ * Author URl: http://forum.cockos.com/member.php?u=47822
+ * Version: 0.96 beta
+ * Repository: 
+ * Repository URl: 
+ * File URl: 
+ * License: GPL v3
+ * Forum Thread:
+ * Forum Thread URl: http://forum.cockos.com/showthread.php?t=155928
+ * REAPER: 5.0
+ * Extensions: 
+ */
+ 
+/**
+ * Change log:
+ * v0.96 (2015-03-30)
+	+ configurable section name for options saving. allows easy copy script as secondary reader with its own options.
+	# save settings button. Dock and settings are saved only when clicking the button. There was a bug saving settings atexit.
+	# small bug in multitrack reading.
+	
+ * v0.95 (2015-03-27)
+	# reading from folder track also accepts items in folder track. 
+	# setting for reading single track or track + its children is now manual again.
+	# gap items always to default color instead of color from item. white wasn't seen well over default background color.
+ 
+ * v0.94 (2015-03-26)
+	+ option for full transparent progress bar
+	# now possible to move reader track or insert tracks above it without losing association of track to read.
+	
+ * v0.93 (2015-03-21)
+	+ support for spacer text items. Items with a note with a space 
+	+ script to fill all gaps with spacer text items in selected track
+	# bug next item text displayed when stopped 
+	# Right click to open options UI. can be changed to left click in script
+ 
+ * v0.92 (2015-03-19)
+	+ option to display next item's text for single track reading and single line text items
+	# bug options showing when moving window in REAPER 4
+	# bug text not displayed at left edge of first item.
+ 
+ * v0.91 (2015-03-18)
+	+ option to display animated line
+	
+ * v0.9 (2015-03-17)
+	+ New UI options. Click on reader to open and close.
+	+ option auto-color text from item
+	+ option auto-color background from item
+	# display all notes when overlapped when reading from parent track.
+	# known bug: multiline texts + multitrack reading + auto coloring is not fully supported.
+
+ * v0.8 (2015-03-08)
+    + SHIFT+click: Enable/Disable reading from parent track
+    # better multiline formatting
+	
+ * v0.7 (2015-03-06)
+    + multiple tracks reader, specify the parent track.
+	# more format combinations
+	# background format can be <background="#rrggbb">  or <background="#rrggbb" />
+	# bug note was not displayed if cursor stopped exactly at item start.
+ 
+ * v0.6 (2015-03-04)
+    + new multiline engine
+    + centered display option (good for subtitles) CTRL+Click to change left/center
+    + italics, bold, underline, font color support, and background color support.
+    # now also works in stopped mode 
+    # CPU optimizations
+	
+ * v0.5 (2015-03-01)
+    + multiline text supported
+    # bug fix some notes were not displayed 
+ 
+ * v0.4 (2015-02-25)
+	+ right click mouse button to enable/disable recording notification
+	
+ * v0.3 (2015-02-24)
+	+ remembers track id, globally in REAPER 4 and per project in REAPER 5
+ 
+ * v0.2 (2015-02-21)
+	+ REAPER 5 version with docked state support. It will remember docked position. Thanks spk77
+	+ REAPER 4 version as separated download
+ 
+ * v0.1 (2015-02-20)
+	+ Multiple readers. click on reader to specify track id to read from.
+	+ Customizable colors per item
+	+ Recording background color support. detects when it is recording. 
+
+ */
+
+version = "0.96";
+
+///////////// OPTIONS //////////
+
+// sectionname
+// If you copy the script to NotesReaderSecondary.eel for example. you can have multiple instances of the script
+// changing the sectionname to something else like "NotesReaderSecondary" for example would allow to save its own settings.
+
+//sectionname= "NotesReaderSecondary";
+sectionname= "NotesReader";
+
+
+// mousebutton = 1; click with left mouse button to display options
+// mousebutton = 2; click with right mouse button to display options
+mousebutton = 2;
+
+// font name
+font_name = "Arial";	
+
+// Initial width of window
+Initial_width = 1274;	
+// Initial height of window
+Initial_height = 200;
+
+// Light theme
+	// Font colors - use values between 0-255
+	font_color_r = 0;
+	font_color_g = 0;
+	font_color_b = 0;
+	// Background color - use values between 0-255
+	bg_r = 230;
+	bg_g = 230;
+	bg_b = 220;
+
+/* // Dark theme
+	// Font colors - use values between 0-255
+	font_color_r = 255;
+	font_color_g = 255;
+	font_color_b = 255;
+	// Background color - use values between 0-255
+	bg_r = 20;
+	bg_b = 20;
+	bg_g = 20; */
+
+// Recording colors
+	// Text color when recording - use values between 0-255
+	font_rec_r = 255;
+	font_rec_g = 255;
+	font_rec_b = 255;
+	// Background color when recording - use values between 0-255
+	rec_r = 150;
+	rec_g = 0;
+	rec_b = 0;
+
+//V5>>>
+	// Remember dock position per project or globally.
+	Remember_dock_per_project = 1;
+//V5<<<
+
+//////////////////////////////// End of Options
+
+
+
+
+
+
+
+
+
+
+// Don't modify below here 
+////////////////////////////////////////////////////////////////////////////////////////////// 
+	
+
+function savedockstate() (
+	//V5>>>
+	dockstate = gfx_dock(-1); // store dockstate while gfx window is open
+	#dockstate = sprintf(#, "%d", dockstate); // "dockstate" int -> str
+	Remember_dock_per_project == 1 ? (
+		SetProjExtState(0, sectionname, "dock", #dockstate); // store "dockstate" string
+	);
+	//V5<<<
+	SetExtState(sectionname, "dock", #dockstate, 1); // store "dockstate" string
+);
+
+	
+function GetTrackID_Dialog()
+(
+  GetUserInputs("Enter Track ID", 1, "ID:", #retvals_csv);
+  #dialogstr = #retvals_csv;
+  match("%i", #retvals_csv, input) ? (
+    readertrackid = input;
+  );
+  
+);
+
+function ReadExtState(section, key, isint, default) (
+	
+	HasExtState(section, key) ? ( 
+	
+		Remember_dock_per_project != 1 ? (
+			GetExtState(#ds, section, key) ? ( 
+			isint == 1 ? match("%d", #ds, value) : value = #ds; 
+			);
+		);
+		//V5>>>
+		Remember_dock_per_project == 1 ? (
+			GetProjExtState(0, section, key, #ds) ? (
+			isint == 1 ? match("%d", #ds, value) : value = #ds; 
+			);
+		);
+		//V5<<<
+	) : value = default;
+	value;
+);
+
+function savedata() (
+	sprintf(#dockstate, "%d", dockstate);
+	sprintf(#readertrackid, "%d", readertrackid);
+	sprintf(#notifyrecording, "%d", notifyrecording);
+	sprintf(#readparent, "%d", readparent);
+	sprintf(#shownextitem, "%d", shownextitem);
+	sprintf(#progressbar, "%d", progressbar);
+	sprintf(#fullprogressbar, "%d", fullprogressbar);
+	sprintf(#justification, "%d", justification);
+	sprintf(#colorfromitem, "%d", colorfromitem);
+	sprintf(#backgroundfromitem, "%d", backgroundfromitem);
+	
+	//V5 >>>
+	savedockstate();
+	SetProjExtState(0, sectionname, "readertrackid", #readertrackid); 
+	SetProjExtState(0, sectionname, "trackguid", #trackguid); 
+	SetProjExtState(0, sectionname, "notifyrecording", #notifyrecording); 
+	SetProjExtState(0, sectionname, "readparent", #readparent); 
+	SetProjExtState(0, sectionname, "shownextitem", #shownextitem); 
+	SetProjExtState(0, sectionname, "progressbar", #progressbar); 
+	SetProjExtState(0, sectionname, "fullprogressbar", #fullprogressbar); 
+	SetProjExtState(0, sectionname, "justification", #justification); 
+	SetProjExtState(0, sectionname, "colorfromitem", #colorfromitem); 
+	SetProjExtState(0, sectionname, "backgroundfromitem", #backgroundfromitem); 
+	//V5 <<<
+	
+	SetExtState(sectionname, "dock", #dockstate, 1);
+	SetExtState(sectionname, "readertrackid", #readertrackid, 1);
+	SetExtState(sectionname, "trackguid", #trackguid, 1);
+	SetExtState(sectionname, "notifyrecording", #notifyrecording, 1);
+	SetExtState(sectionname, "readparent", #readparent, 1); 
+	SetExtState(sectionname, "shownextitem", #shownextitem, 1); 
+	SetExtState(sectionname, "progressbar", #progressbar, 1); 
+	SetExtState(sectionname, "fullprogressbar", #fullprogressbar, 1); 
+	SetExtState(sectionname, "justification", #justification, 1); 
+	SetExtState(sectionname, "colorfromitem", #colorfromitem, 1); 
+	SetExtState(sectionname, "backgroundfromitem", #backgroundfromitem, 1); 
+);
+
+function exit() (
+	gfx_quit();
+);
+
+function init(title, width, height, dockstate)
+(
+		
+	state_array = 1; // init array 
+	readertrackid = ReadExtState(sectionname, "readertrackid", 1, 1);
+	#trackguid = ReadExtState(sectionname, "trackguid", 0, "");
+	notifyrecording = ReadExtState(sectionname, "notifyrecording", 1, 1);
+	readparent = ReadExtState(sectionname, "readparent", 1, 1);
+	shownextitem = ReadExtState(sectionname, "shownextitem", 1, 0);
+	progressbar = ReadExtState(sectionname, "progressbar", 1, 1);
+	fullprogressbar = ReadExtState(sectionname, "fullprogressbar", 1, 1);
+	justification = ReadExtState(sectionname, "justification", 1, 1);
+	colorfromitem = ReadExtState(sectionname, "colorfromitem", 1, 1);
+	backgroundfromitem = ReadExtState(sectionname, "backgroundfromitem", 1, 1);	
+	
+
+	// open window
+	gfx_init(title, width, height, dockstate);
+
+	// set initial background and text color 
+	gfx_a = 1; 
+	gfx_r_orig = font_color_r/255; 
+	gfx_g_orig = font_color_g/255; 
+	gfx_b_orig = font_color_b/255;
+	bg_color = bg_r + 256*bg_g + 65536*bg_b;
+	bg_color_orig = bg_color;
+	gfx_clear = bg_color;	// clears the background with bg_color
+	cursorchanged=0;
+	
+	gfx_setfont(2,"Arial", 18);
+	
+);
+ 
+function INT2RGB(i) local(x y z) instance(R G B)
+(
+  R = i & 255;
+  G = (i >> 8) & 255;
+  B = (i >> 16) & 255;
+  
+);
+
+function getfirstline(string) local(search) 
+(
+	i=0;
+	search=true;
+	#line="";
+	
+	while(char=str_getchar(#str,0,'c')!=10)   // \n = 10   | = 124
+	(
+		strcpy_substr(#str,string,i,1);
+		char!=10 ? (
+		strcat(#line,#str);
+		
+		);
+		i+=1;
+	);
+	
+	#line;
+);
+
+function gfx_drawstrmultiline(string, size) local(wmax, hmax, w, h)
+(
+	i=1;
+	k=0;
+	wmax=0;
+	hmax=0;
+	linenum=0;
+	tracknum=0;
+	#str="";
+	lenstring=strlen(string);
+	keepformat=0;
+	showcontrols==1 ? gfxwidth=gfx_w-320 : gfxwidth=gfx_w;
+	loop (lenstring, 
+		strcpy_substr(#str,string,i,1);
+						
+		stricmp(#str, "|") == 0 || i==lenstring ? (  // if | new line found
+			strcpy_substr(#line,string,k+1,i-k-1);
+			k=i;
+			stricmp(#line, "") != 0 ? (
+			
+				// print line
+				#insideformat=#line;
+				matchi("<font color=\"%{#color}s\">%{#insidecolor}s</font>?",#line) ? ( 
+					strcpy_substr(#red,#color,1,2);
+					strcpy_substr(#green,#color,3,2);
+					strcpy_substr(#blue,#color,5,2);
+					match("%X", #red, f_r);
+					match("%X", #green, f_g);
+					match("%X", #blue, f_b);
+					gfx_a = 1; gfx_r = f_r/255; gfx_g = f_g/255; gfx_b = f_b/255;		
+				):( 
+					#insidecolor = #line;
+					// get item color
+					colorfromitem==1 && backgroundfromitem==1 ? colorfromitem=0;
+					colorfromitem==1 ? (
+
+						readparent==1 ? RGB.INT2RGB(coloritemArray[linenum+1]); // change this for multitrack multiline
+						
+						//check background
+						
+							gfx_x=1; gfx_y=1;
+							gfx_getpixel(br, bg, bb);
+							grayscale = 0.2*br + 0.7*bg + 0.1*bb;
+							grayscale <= 0.410 ? (
+							  text_color = 0.80; // white
+							) : (
+							  text_color = 0.10; // black
+							);
+							
+							
+							 gfx_r = gfx_g = gfx_b = text_color;
+						
+						
+						
+						gfx_a = 1; gfx_r=RGB.R/255;	gfx_g=RGB.G/255; gfx_b=RGB.B/255;
+						//is gap and color from item enabled? reset to default color
+						isgap==1 ? (
+							gfx_a = 1; gfx_r=gfx_r_orig;	gfx_g=gfx_g_orig; gfx_b=gfx_b_orig;
+						);
+					):(
+						gfx_a = 1; gfx_r=gfx_r_orig;	gfx_g=gfx_g_orig; gfx_b=gfx_b_orig;
+						//check background
+						backgroundfromitem==1 ? (
+							gfx_x=1; gfx_y=1;
+							gfx_getpixel(br, bg, bb);
+							grayscale = 0.2*br + 0.7*bg + 0.1*bb;
+							grayscale <= 0.410 ? (
+							  text_color = 0.80; // white
+							) : (
+							  text_color = 0.10; // black
+							);
+							gfx_r = gfx_g = gfx_b = text_color;
+						
+						);
+						
+					);
+					
+					
+
+					
+					
+					GetPlayState() == 5 ? (	//recording?
+						notifyrecording == 1 ? (
+							colorfromitem!=1 ? (
+								gfx_a = 1; gfx_r = font_rec_r/255; gfx_g = font_rec_g/255; gfx_b = font_rec_b/255;	
+							);
+						);
+					);
+				);
+				
+				makefontsmaller=1;
+				matchi("<next>%{#insideformat}s*",#insidecolor) ? ( 
+					readerxpos=((playposition-(itemStart+(itemDuration/6)))*0.6)/itemDuration;
+					gfx_a = readerxpos;
+					makefontsmaller=0.7;
+					#insidecolor=#insideformat;
+				);
+				
+				keepformat==0 ? f='';
+				// check format
+				
+				matchi("*<i><b>%{#insideformat}s</b></i>*",#insidecolor) ? ( f='ib';);
+				matchi("*<i><u>%{#insideformat}s</u></i>*",#insidecolor) ? ( f='iu';);
+				matchi("*<i><b><u>%{#insideformat}s</u></b></i>*",#insidecolor) ? ( f='ibu';);
+				matchi("*<i><u><b>%{#insideformat}s</b></u></i>*",#insidecolor) ? ( f='iub';);
+	
+				matchi("*<b><i>%{#insideformat}s</i></b>*",#insidecolor) ? ( f='bi';);
+				matchi("*<b><u>%{#insideformat}s</u></b>*",#insidecolor) ? ( f='bu';);
+				matchi("*<b><u><i>%{#insideformat}s</i></u></b>*",#insidecolor) ? ( f='bui';);
+				matchi("*<b><i><u>%{#insideformat}s</u></i></b>*",#insidecolor) ? ( f='biu';);
+				
+				matchi("*<u><b>%{#insideformat}s</b></u>*",#insidecolor) ? ( f='ub';);
+				matchi("*<u><i>%{#insideformat}s</i></u>*",#insidecolor) ? ( f='ui';);
+				matchi("*<u><b><i>%{#insideformat}s</i></b></u>*",#insidecolor) ? ( f='ubi';);
+				matchi("*<u><i><b>%{#insideformat}s</b></i></u>*",#insidecolor) ? ( f='uib';);
+				
+				matchi("*<i>%{#insideformat}s</i>*",#insidecolor) ? ( f='i';);
+				matchi("*<b>%{#insideformat}s</b>*",#insidecolor) ? ( f='b';);
+				matchi("*<u>%{#insideformat}s</u>*",#insidecolor) ? ( f='u';);
+				
+				f==='' ? (
+				#text=#insidecolor;
+				):(
+				#text=#insideformat;
+				);
+				
+				//multiline format
+				//open
+				
+				matchi("%0s<i><b><u>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='ibu'; keepformat=1 );
+				matchi("%0s<i><u><b>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='iub'; keepformat=1 );
+				matchi("%0s<i><b>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='ib'; keepformat=1 );
+				matchi("%0s<i><u>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='iu'; keepformat=1 );
+				
+				matchi("%0s<b><u><i>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='bui'; keepformat=1 );
+				matchi("%0s<b><i><u>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='biu'; keepformat=1 );
+				matchi("%0s<b><i>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='bi'; keepformat=1 );
+				matchi("%0s<b><u>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='bu'; keepformat=1 );
+				
+				matchi("%0s<u><b><i>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='ubi'; keepformat=1 );
+				matchi("%0s<u><i><b>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='uib'; keepformat=1 );
+				matchi("%0s<u><b>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='ub'; keepformat=1 );
+				matchi("%0s<u><i>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='ui'; keepformat=1 );
+				
+				matchi("%0s<b>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='b'; keepformat=1 );
+				matchi("%0s<i>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='i'; keepformat=1 );
+				matchi("%0s<u>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); f='u'; keepformat=1 );
+				
+				// closing
+				matchi("%0s</b>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); keepformat=0 );
+				matchi("%0s</i>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); keepformat=0 );
+				matchi("%0s</u>%0s",#text,#fa,#fb) ? ( #text=""; strcat(#text,#fa); strcat(#text,#fb); keepformat=0 );
+				
+				
+				size==0 ? (
+					gfx_setfont(1, font_name, 100, f);
+					gfx_measurestr(#text,w,h);	// measure text
+					w > wmax ? wmax=w;
+					hmax = hmax + h;
+				):(
+					
+					gfx_setfont(1, font_name, size, f);
+					alturatexto=gfx_texth;
+					gfx_setfont(1, font_name, size*makefontsmaller, f);
+					//center justification
+					justification == 1 ? (
+						gfx_measurestr(#text,w,h);
+						gfx_x = (gfxwidth-w)/2
+					): gfx_x = (alturatexto/4);
+					gfx_y = (alturatexto/4)+(alturatexto*linenum); // y position
+					
+					gfx_drawstr(#text); 
+				);
+			
+			linenum+=1;
+			);
+		);
+		i+=1;
+	);
+	
+	fontsizefit=(gfxwidth/(wmax+50))*100;	// new font size needed to fit.
+	fontsizefith=(gfx_h/(hmax+50))*100;	// new font size needed to fit in vertical.
+	size_mlfit=min(fontsizefit,fontsizefith);
+	
+);
+
+function formatlines(string) local(search)  
+(
+
+	offset=0;
+	#str="";
+	#returnstr="";
+	lenstring=strlen(string);
+	loop(lenstring,
+		strcpy_substr(#str, string, offset, 1);
+		char=str_getchar(#str,0,'c');
+		offset+=1;
+		char!=124 ? (
+			strcat(#returnstr,#str);
+		);
+	);
+	#returnstr;
+);
+
+
+function resetdisplay() 
+(
+	#notelines = "| ";
+	bg_color=bg_color_orig;	
+	gfx_r=gfx_r_orig;	gfx_g=gfx_g_orig; gfx_b=gfx_b_orig;
+	gfx_clear = bg_color;	// clears the background with bg_color
+	gfx_update();
+);
+
+
+function draw_string(x, y, name, state_array_pos, r,g,b) local(s_w, s_h) 
+(
+	gfx_x = x;
+	gfx_y = y;
+	gfx_r = r; gfx_g = g; gfx_b = b;
+	gfx_printf(name);
+);
+
+
+function draw_clickable_string(x, y, name, state_array_pos, r,g,b) local(s_w, s_h) // fork from spk77 function
+( 
+	gfx_x = x;
+	gfx_y = y;
+	gfx_measurestr(name, s_w, s_h);
+
+	//state_array[state_array_pos] == 0 ? gfx_a = 1 : gfx_a = 0.3; // highlight selected properties
+	gfx_r = r; gfx_g = g; gfx_b = b;
+
+	// is mouse on string...?
+	mouse_x > x && mouse_x < x + s_w && mouse_y > y && mouse_y < y + gfx_texth ? (
+
+	mouseonstring=1;
+	gfx_a = 0.2;
+	gfx_rect(x, y, s_w, gfx_texth);
+	gfx_a = 1;
+
+	// mouse click
+	mouse_cap == 0 && last_mouse_cap == 1 ? (
+		state_array[state_array_pos] = !state_array[state_array_pos];
+		mouse_state = 1; 
+		clicked_string = 1;
+
+		state_array_pos==1 ? (
+			(selectedtrack =  GetSelectedTrack(0,0)) ? (
+				GetTrackGUID(#trackguid, selectedtrack);
+				tid=0;
+				loop(CountTracks(0),
+					(track = GetTrack(0, tid)) ? (
+						track==selectedtrack ? (
+							readertrackid=tid+1;	
+						);
+					);
+				tid+=1;
+				);
+			):(
+				GetTrackID_Dialog();	
+			);
+		);
+		
+		state_array_pos==2 ? readparent= readparent == 1 ? 0:1;
+		state_array_pos==3 ? notifyrecording= notifyrecording == 1 ? 0:1;
+		state_array_pos==4 ? justification= justification == 1 ? 0:1;
+		state_array_pos==5 ? (
+			backgroundfromitem == 1 && colorfromitem==0 ? backgroundfromitem=0;
+			colorfromitem= colorfromitem == 1 ? 0:1;
+		);
+		state_array_pos==6 ? backgroundfromitem= backgroundfromitem == 1 ? 0:1;	 
+		
+		state_array_pos==10 ? exit();	 
+		showcontrols=1;
+		state_array_pos==11 ? (
+			savedata();
+			showcontrols=0;
+			
+		);
+		
+		state_array_pos==7 ? progressbar= progressbar == 1 ? 0:1;	 
+		state_array_pos==8 ? shownextitem= shownextitem == 1 ? 0:1;	 
+
+	);
+
+
+	);
+
+	gfx_printf(name);
+);
+
+function DrawProgressBar() (
+	readerxpos=((playposition-itemStart)*coordcontrol)/itemDuration;
+	isgap==1 ? (
+		fullprogressbar==1 ? (
+			gfx_a = 0.2;
+			gfx_rect(0, 0, readerxpos, gfx_h);
+		):(
+			gfx_a = 0.3;
+			gfx_rect(0, gfx_h-(gfx_h/20), readerxpos, gfx_h);
+		);
+	):(
+		fullprogressbar==1 ? (
+			gfx_a = 0.2;
+			gfx_rect(0, 0, readerxpos, gfx_h);
+		):(
+			gfx_a = 1;
+			gfx_rect(0, 0, readerxpos, gfx_h/20);
+		);
+	);
+);
+
+
+function ProcessTrack(whichtrack) (
+
+	NumberItemsinTrack=GetTrackNumMediaItems(whichtrack);
+	(item = GetTrackMediaItem(whichtrack,NumberItemsinTrack-1)) ? (
+		LastitemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		LastitemDuration = GetMediaItemInfo_Value(item, "D_LENGTH");
+		LastitemEnd = LastitemStart + LastitemDuration;
+	);
+	(item = GetTrackMediaItem(whichtrack,0)) ? (
+		FirstitemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+	);
+	GetPlayState() == 0 || GetPlayState() == 2 ? (
+		playposition = GetCursorPosition();	// get current cursor position while stopped
+	):(
+		playposition = GetPlayPosition();	// get current play position
+		cursorchanged = 1;
+	);
+	
+	// init loop vars
+	i = 0;	
+	cursorchanged=0;
+	#stra="";
+	#notelinesnext="";
+	notfounditem = 1;
+	itemnextStart =playposition+1;
+	
+	LastitemEnd > playposition && FirstitemStart <= playposition ? (
+		while(notfounditem && NumberItemsinTrack>0) (
+			i < NumberItemsinTrack && playposition<itemnextStart  ? (
+			
+			(item = GetTrackMediaItem(whichtrack,i)) ? (
+				
+					itemStart = GetMediaItemInfo_Value(item, "D_POSITION");
+					itemDuration = GetMediaItemInfo_Value(item, "D_LENGTH");
+					itemEnd = itemStart + itemDuration;
+					
+
+					GetPlayState() == 0 || GetPlayState() == 2 ? (
+						playposition = GetCursorPosition();	// get current cursor position while stopped
+						playposition != playposition_prev ? (	// if position has changed
+							cursorchanged=1;
+							playposition_prev=playposition;
+						);
+					):(
+						playposition = GetPlayPosition();	// get current play position
+						cursorchanged = 1;
+					);
+					
+					
+					(playposition >= itemStart) ? (
+						(playposition < itemEnd) ? (
+							// found
+
+							(itemnext = GetTrackMediaItem(whichtrack,i+1)) ? (
+								GetSetItemState(itemnext, #strnext="");
+								match("*<NOTES??%{#notelinesnext}s??IMGRESOURCEFLAGS*", #strnext);
+							);
+							
+							notfounditem=0;
+							GetSetItemState(item, #str="");
+							
+							colorfromitem==1 ? (
+								coloritem=GetDisplayedMediaItemColor(item);
+								readparent==1 ? coloritemArray[t]=coloritem; // change this for future versions to support multiline color with multitracks
+								RGB.INT2RGB(coloritem);
+							);
+							
+							backgroundfromitem==1 ? (
+								bg_color=GetDisplayedMediaItemColor(item);
+							);
+							
+							match("*<NOTES?%{#notelines}s??IMGRESOURCEFLAGS*", #str) ? ( // extract note lines
+								
+								
+									// colors
+									#lines = "";
+									match("%s*|<background=\"%s\"*>?",#notelines, #lines, #backgroundcolor) ? ( 	// if bg color is found
+										strcpy_substr(#red,#backgroundcolor,1,2);
+										strcpy_substr(#green,#backgroundcolor,3,2);
+										strcpy_substr(#blue,#backgroundcolor,5,2);
+										match("%X", #red, b_r);
+										match("%X", #green, b_g);
+										match("%X", #blue, b_b);
+										bg_color = b_r + 256*b_g + 65536*b_b;	
+										
+										#notelines=#lines;
+									):(
+										backgroundfromitem!=1? (
+										bg_color = bg_color_orig;
+										);
+									);
+							);
+						):( // no item found at position
+							notfounditem = 1;
+							#notelines="| ";
+						);
+					):(
+						notfounditem = 1;
+						#notelines="| ";
+						// not found
+					);
+				//);		
+		);
+		i += 1;	
+		
+		):(// i < number items
+			// not found
+			notfounditem = 0; // 0 to end the while
+			cursorchanged == 1 ? (	// cursor has changed and not found any item
+			resetdisplay();
+			);
+		); 
+		
+		);	// while searching 
+	) : (
+		// playposition before first item or after last item:
+		resetdisplay();
+		
+	);
+
+);
+
+function scantracks(tracktoscan) (
+	ChildrenTracksCount=1;
+	ChildrenTracksArray=100;  // init array offset
+	coloritemArray=1000; // init array offset
+	ChildrenTracksArray[0]=tracktoscan;	
+	i=1;
+	loop(CountTracks(0),
+		(track = GetTrack(0, i)) ? (
+			GetParentTrack(track)==tracktoscan ? (
+				ChildrenTracksArray[ChildrenTracksCount]=track;	
+				ChildrenTracksCount += 1;	
+			);
+		);
+	i+=1;
+	);
+);
+
+function rescantrackid(guidstring) (
+	tid=0;
+	loop(CountTracks(0),
+	(track = GetTrack(0, tid)) ? (
+		GetTrackGUID(#trackgui_scan, track);
+		stricmp(guidstring,#trackgui_scan) == 0 ? (
+			readertrackid=tid+1;	
+		);
+	);
+	tid+=1;
+	);
+);
+
+
+function run() local(mouse_state)
+(
+		
+		
+	// time_precise() - t1 > 0.5 ? ( 
+		
+		track=Gettrack(0,readertrackid-1);			// get track
+		
+		GetTrackGUID(#trackgui_trackid, track);
+		stricmp(#trackguid,#trackgui_trackid) != 0 ? (
+			//track moved
+			rescantrackid(#trackguid);
+		);
+		
+		NumberItemsinTrackID=GetTrackNumMediaItems(track);
+		//NumberItemsinTrackID==0 ? readparent=1 : readparent=0;   // disabled auto read from parent if no items
+		
+		
+		readparent==0 ? (
+			// read single track
+			ProcessTrack(track);
+			stricmp(#notelines, "| \n")==0 ? (
+				isgap=1;
+			):(
+				isgap=0;
+			);
+			stricmp(#notelinesnext, "")!=0 ? (
+				shownextitem==1 ? (
+					strcat(#notelines,"|<next>");
+					stricmp(#notelinesnext, " \n") != 0 ? strcat(#notelines,"...");
+					strcat(#notelines,#notelinesnext);
+				);
+			);
+		):(
+			// read track and its children
+			progressbar=0;
+			colorfromitem=0;
+			backgroundfromitem=0;
+			scantracks(track);
+			t=0;
+			#notelinesall="";
+			#notelines="";
+			Loop (ChildrenTracksCount,
+				ProcessTrack(ChildrenTracksArray[t]);
+				stricmp(#notelines, "| ") ? (	// if line is not "| "
+					strcat(#notelinesall,#notelines);
+				);
+				
+
+			t+=1;
+			);
+			#notelines=#notelinesall;
+			
+		);
+		
+		GetPlayState() == 5 ? (	//recording? change to recording colors
+			notifyrecording == 1 ? (
+				bg_color = rec_r + 256*rec_g + 65536*rec_b;
+				gfx_a = 1; gfx_r = font_rec_r/255; gfx_g = font_rec_g/255; gfx_b = font_rec_b/255;	
+			);
+		):(
+			// not recording:
+			readparent==1 ? ( // don't use item color if reading multitrack for now
+				bg_color=bg_color_orig;	
+			);
+		);   
+
+	gfx_clear = bg_color;	
+	
+	
+							
+	gfx_update(); // update background first. less flicker, better background rendering.
+	gfx_drawstrmultiline(#notelines,0);	// calculate sizes first
+	gfx_drawstrmultiline(#notelines,size_mlfit);	// do it again and draw the texts
+	
+	// draw reader animated rectangle
+	notfounditem !=1 ? (
+		progressbar==1 ? DrawProgressBar();
+	);
+	
+	// on click, show options UI
+    coordcontrol=showcontrols==1 ? gfx_w-320:gfx_w; 
+	mouse_y < 20 && mouse_x < coordcontrol && mouse_cap == 0 && last_mouse_cap == mousebutton ? fullprogressbar=fullprogressbar == 1 ? 0:1;
+	
+	mouse_y >= 20 && mouse_x < coordcontrol && mouse_cap == 0 && last_mouse_cap == mousebutton ? showcontrols=showcontrols == 1 ? 0:1;
+	
+	/* // right click menu
+	cmd=0;
+	mouse_x < coordcontrol && mouse_cap == 0 && last_mouse_cap == 2 ? (
+		gfx_x=mouse_x;
+		gfx_y=mouse_y;
+		gfx_dock(-1) > 0 ? cmd=gfx_showmenu("Undock|Options|Close") : cmd=gfx_showmenu("Dock|Options|Close");
+	);
+	cmd==1 ? (
+		dockstate=gfx_dock(-1);
+		dockstate > 0 ? (
+			// docked? then undock
+			#dockstate = sprintf(#, "%d", dockstate); // "dockstate" int -> str
+			SetExtState(sectionname, "dock", #dockstate, 0); // store "dockstate" string
+			gfx_dock(0);
+			
+		) : (
+			match("%d", #dockstate, dockstate) ? gfx_dock(dockstate): gfx_dock(1);
+			
+		);
+	);
+	cmd==2 ? (
+		showcontrols=showcontrols == 1 ? 0:1;
+	);
+	cmd==3 ? (
+		exit();
+	);
+	 */
+	
+	
+	showcontrols==1 ? (
+		// showcontrols_prev==0 ? (
+			// savedockstate();
+			// showcontrols_prev=1;
+		// );
+		xpos=gfx_w-300;
+		
+		gfx_a = 1;gfx_r=1;gfx_g=1;gfx_b=1;
+		gfx_rect(xpos-20, 0, gfx_w, gfx_h);
+		gfx_a = 1;gfx_r=0.9;gfx_g=0.9;gfx_b=0.9;
+		gfx_rect(xpos, 30, 280, 165);
+		
+		
+		gfx_a = 1;gfx_r=0;gfx_g=0;gfx_b=0.1;
+		gfx_x=xpos; gfx_y=6;
+		gfx_setfont(3, Arial, 16, 'b');
+		gfx_drawstr("OPTIONS");
+		
+		gfx_x=gfx_x+10;
+		gfx_y=gfx_y+2;
+		gfx_setfont(3, Arial, 14);
+		gfx_drawstr(#notesreadername);
+		
+		
+		gfx_setfont(2);
+		draw_clickable_string(xpos+265, 4, " x ", 10, 0,0,0);	// exit
+		draw_clickable_string(xpos+170, 34, " Save settings ", 11, 0.4,0.2,0);	// Save settings
+		
+		xpos=gfx_w-290;
+		ymargin=25;
+		sprintf(#readertrackid_button, "Track ID = %d", readertrackid);
+		draw_clickable_string(xpos, ymargin+gfx_texth*1, #readertrackid_button, 1, 0,0,0);	
+		
+		readparent==1 ? #readparent_button = "Reading Track and its Children" : #readparent_button = "Reading Single Track"; 
+		draw_clickable_string(xpos, ymargin+gfx_texth*2, #readparent_button, 2, 0, 0, 0);
+		
+		readparent!=1 ? (
+			progressbar==1 ? #progressbar_button = "Progress Bar Enabled" : #progressbar_button = "Progress Bar Disabled"; 
+			draw_clickable_string(xpos, ymargin+gfx_texth*4, #progressbar_button, 7, 0,0,0);	
+		);
+		
+		readparent!=1 ? (
+			shownextitem==1 ? #shownextitem_button = "Display Next Enabled" : #shownextitem_button = "Display Next Disabled"; 
+			draw_clickable_string(xpos, ymargin+gfx_texth*3, #shownextitem_button, 8, 0,0,0);	
+		);
+		
+		justification==1 ? #justification_button = "Justification Center" : #justification_button = "Justification Left"; 
+		draw_clickable_string(xpos, ymargin+gfx_texth*5, #justification_button, 4, 0,0,0);	
+		
+		notifyrecording==1 ? #notifyrecording_button = "Recording Color Enabled" : #notifyrecording_button = "Recording Color Disabled"; 
+		draw_clickable_string(xpos, ymargin+gfx_texth*6, #notifyrecording_button, 3, 0,0,0);	
+		
+		readparent!=1 ? (
+		colorfromitem==1 ? #colorfromitem_button = "Color from Item Enabled" : #colorfromitem_button = "Color from Item Disabled"; 
+		draw_clickable_string(xpos, ymargin+gfx_texth*7, #colorfromitem_button, 5, 0,0,0);	
+		backgroundfromitem==1 ? #backgroundfromitem_button = "Background from Item Enabled" : #backgroundfromitem_button = "Background from Item Disabled"; 
+		draw_clickable_string(xpos, ymargin+gfx_texth*8, #backgroundfromitem_button, 6, 0,0,0);	
+		);
+		
+	):(
+		showcontrols_prev==1 ? (
+			savedata();
+			showcontrols_prev=0;
+		);
+	);
+	
+	last_mouse_cap = mouse_cap;
+	
+	gfx_update();	// updata again. 
+	
+	 // time_precise(t1); // "reset" timer
+	 // );
+	
+gfx_getchar() >= 0 ? defer("run();");	// run again until closed.
+	
+);
+
+
+
+
+
+
+// start
+
+#notesreadername=sprintf(#,"HeDa Notes Reader v%s", version);
+dockstate = ReadExtState(sectionname, "dock", 1, 0);
+init(#notesreadername, Initial_width, Initial_height, dockstate);
+atexit("exit();");
+
+
+run();

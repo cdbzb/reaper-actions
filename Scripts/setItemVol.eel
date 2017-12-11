@@ -1,0 +1,19 @@
+(
+	Undo_BeginBlock();
+		item = GetSelectedMediaItem(0,i);
+		take = GetActiveTake(item);
+		
+		// set rate
+rate *= ratio;
+length /= ratio;
+		GetUserInputs("Set Take Vol", 1, "Level", #vol);
+		match( "%d",#vol,volvol );
+volvol += 1;
+		volvoll = 2^(volvol/6.02);
+		SetMediaItemTakeInfo_Value(take, "D_VOL", volvoll);
+			SetMediaItemLength(item, length, 0);
+	
+	UpdateArrange();
+	Undo_EndBlock(#undo, -1);
+);
+

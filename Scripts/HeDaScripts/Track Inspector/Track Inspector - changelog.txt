@@ -1,0 +1,286 @@
+﻿---------------------------------------------------------------------------------------
+  Track Inspector - Changelog (What's new)     
+---------------------------------------------------------------------------------------
+  
+* v1.1rc1 (2017-01-06)
+  + Release Candidate for version 1.1
+
+* v1.1pre10 (2016-12-14)
+  + Smart Toggle active sends [&postcount=531] Lmb: Mute/unmute active sends without unmuting already muted sends. CTRL+lmb: resets which active sends to toggle. Rmb: Toggle All Sends.
+  # Change track selection by selecting items [&postcount=540]
+  # Fade opacity in bars and text for muted sends & receives
+
+* v1.1pre9 (2016-11-21)
+  + Auto Enlarge selected track toggle button. Right click to define height.
+  # fix: update position of all track notes, not only current track. [&postcount=515]
+  # fix: delete track notes from tracks that are deleted.
+
+* v1.1pre8 (2016-10-05)
+  # fix: work with "Mouse Click in track view changes track selection" [&postcount=491]
+  # fix: soft compare on different plugins issue affecting other parameters instead of wet parameter. [&postcount=491]
+  # fix: soft bypass compare also started by CTRL+right click. 
+  # fix: soft bypass comparing turn off by CTRL+click on red knob independently of red knob position.
+
+* v1.1pre7 (2016-09-25)
+  # fix: pan mode not updated correctly when for project settings default mode.[&postcount=482]
+  # fix: reorder was triggered just by clicking on a fx to open it causing delay opening the plugin.
+  # fix: undo for various actions on sends and receives
+
+* v1.1pre6 (2016-09-24)
+  + CTRL+click on FX plugin to toggle Online/Offline
+  # Do not drag reorder FX if parameters are displayed in FX chain (not easy to fix for now)
+  # fix: Add Undo when removing FX, reordering FX...
+  # fix: small color fix reordering fx
+  # fix: hide PreFX button when there is no room for meter.
+
+* v1.1pre5 (2016-09-22)
+  + Reorder FX plugins (drag and drop)
+  + Sends menu option to increase bar's height
+
+* v1.1pre4 (2016-09-19)
+  + Meters: Menu option to use EBUR128 dpmeter or use RMS instead.
+  + Right click Track Name, go to track by ID number. 
+  # scroll to selected track ">" button removed. Left click on Track Name instead.
+  # fix: Unnecessary aux track creation for Track Inspector Master. [&postcount=455]
+  # fix: saving RMS window size in settings
+  # change userinputs width where needed (add note, rename version etc) (REAPER 5.24+) 
+
+* v1.02 (2016-09-08)
+  # fix: fx groups saving.
+  # fix: mouse actions on parameters if settings is opened [?p=1727017&postcount=12]
+  # fix: allow not sending audio by default for sends in global preferences. 
+ 
+* v1.01 (2016-09-06)
+  # fix: crash importing project data [p=1726574&postcount=4]
+
+* v1.0 (2016-09-05)
+  # Track Inspector Master saves settings in own file.
+  # fix: various focus issues fixed, when adding FX, opening fx chain, floating fx [&postcount=416]
+  # fix: another fix for saving project data.
+  # fix: correct usage of GetTrackStateChunk and SetTrackStateChunk with undo flag false.
+
+* v1.0beta16 (2016-08-10)
+  # when adding track notes, always use cursor position, not playing cursor
+  # Global option: use_new_reset_functions = true  to use the new rest functions from beta15. They don't generate unnecessary undo entries but can generate glitches if using a lot of RT CPU
+
+* v1.0beta15 (2016-08-08)
+  # FIX: Don't create undo when resetting plugins!
+  # fix: Better Track Versions saving, it was not being saved sometimes. 
+  # copy/paste track notes now in notes panel button too
+  # copy/paste fx chain now in fx chain panel button too
+  # fix: Don't diplay 0/0 if there are no track notes
+
+* v1.0beta14 (2016-08-06)
+  # fix: crash renaming track version if not other versions are created [&postcount=404]
+
+* v1.0beta13 (2016-08-04)
+  + Track Versions
+  + Copy/Paste FX Chain from one track to another
+  + Global option: "use_mousewheel = false"  to disable mouse wheel in the script
+  # fix: another small tooltips fix
+
+* v1.0beta12 (2016-07-29)
+  # fix: sends presets saving
+
+* v1.0beta11 (2016-07-25)
+  # Project data (track marker notes, fx groups, etc) is saved in the RPP file now instead of the external ".TrackInspector" file. 
+    If you open a project that was saved with previous versions of Track Inspector, the data is not found in the RPP project because it is in the .TrackInspector file, so you must manually import it once, from the .TrackInspector file.
+  + Import/Export project data to file (as backup for example)
+  + Copy/Paste Track's marker notes between tracks
+  + Global option: premaster_trackname
+  + Global option: sends_navigation_auto_scroll_to_track (false by default. set to true if you want to scroll to track when navigating with right click on sends and receives)
+  # fix: show all notes button: showing all markers from all tracks.
+
+* v1.0beta10 (2016-07-22)
+  # Global Options: customize color of fader gain dB number. (text_colordb1_ above 0.0 and text_colordb2_ below 0.0)
+
+* v1.0beta9 (2016-07-21)
+  + Button: Vertical scroll track into view.
+  + Rendering detection. Displays a simple message while rendering. 
+  + Right click volume fader to add or subtract specific dB amount to current dB value.
+  # fix: remove message alerting that PREMASTER track not found.  
+  # fix: function unknown, error at exiting REAPER on OSX. (REAPER 5.23) [&postcount=374]
+
+* v1.0beta8 (2016-07-16)
+  + Option: Use PREMASTER track
+  + Latch Preview compatible (REAPER 5.22)
+  # fix: Dock/Undock button (broken in beta7)
+  # fix: tooltips were displayed even if a window(MIDI editor for example) is over the script window.  
+
+* v1.0beta7 (2016-07-12)
+  + A/B between two plugins in the chain
+  + Button to change meters panel height modes (variable, variable with minimum of half the total height, fixed at half, or fixed x pixels)
+  # Sidechain sends and receives bars display differently (assumes sidechain at 3+4 channels). Behavior can be disabled in global options.
+
+* v1.0beta6 (2016-07-06)
+  # fix: highlight clickable area of sends receives under mouse (introduced in beta5) only if mouse in script window area.
+
+* v1.0beta5 (2016-07-04)
+  + Middle Mouse button drag to scroll all panels vertically.
+  # fix: improved area to drag and mouse wheel sends and receives.
+  # mouse wheel on delay to change delay +/- mw_delay_step in ms  
+
+* v1.0beta4 (2016-06-27)
+  + dpMeterII 1.1.8 or later needed.
+  # fix: Freeze details info now supports big chunks. It shouldn't cause hang or slowdown as before.
+  # fix: freeze details info now updated when freeze/unfreeze command run outside script.
+  # fix: Toggle envelope if not track selected [postcount=324]
+  # fix: Select track when right click send to go to that track
+  # fix: overlapping pagination buttons in notes panel
+  # fix: master track can be used to store track notes too. not depending in mastertrack GUID now 
+    which was changing each time project load (maybe a bug) 
+  # fix: dock/undock button doesn't work sometimes
+  + Right click Record button to show Track's recording settings
+  
+* v1.0beta3 (2016-05-08)
+  + Settings page. "≡" button
+  + CTRL+Lmb to panels buttons to isolate panel visibility (except meters panels). 
+    CTRL+Lmb again to show all panels.
+  + Button to toggle Global Visibility of panels or Saved per track.
+  + Automation: buttons for "Write current values for actively writing" actions
+  + Mouse wheel to change Sends and receives (step option: mw_sends_step)
+  + Mouse wheel to change pan fader (step option: mw_pan_step)
+  + Mouse wheel to change parameters (step option: mw_param_step)
+  # Double click in delay to reset delay to 0 (removing delay jsfx)
+  # Option: display_linesonfader: display small lines each display_linesonfader_step dB on gain fader.
+  # fix some buttons if no track selected [postcount=309]
+  # fix show envelopes button focus related issue [postcount=311]
+  # fix: avoid make dirty project on create new tab project
+  # Freeze panel info causing crash or slowness,
+    option show_freeze_info = false to disable freeze info until better chunk reading.
+  # optimizations when changing track
+
+* v1.0beta2 (2016-04-27)
+  + SHIFT+click send presets to send to channel 3+4 of preset's track destination
+  + Meters: option to show Prefx meter by default (rightclick menu in meters panel)
+  + Meters: option to hide/show RMS meters. 
+  + Meters: option to use ML instead SL for the EBUR128 filled rectangle.
+  + fader_limit options to set limits by default on start.
+  # fix: Do not steal focus
+  # fix: disable plugins on Listening_Mode(no meters display)
+  # fix: Show all markers when showing all track notes.
+  # fix: Note checkmark didn't work showing all track notes.
+  # click in empty meters area in listening mode to enable meters again. 
+  # Don't use audio_statistics and use only dpMeter and JSFX Track_Inspector
+  
+* v1.0beta1 (2016-04-21)
+  # IMPORTANT: dpMeter 1.4.3 required
+  # several bug fixes: Allow undo, docking, run master instance at the same time 
+  # compatibility fixes to work with HeDa Loudness Graph
+  + Fader: PreFX Fader to offset Prefx Volume envelope
+  + TCP-FX Parameters panel
+  + General panel: Record Arm, Monitoring, Input-FX, Invert Polarity, Timing, Lock track, Mute, Solo buttons.
+  + Pan: Stereo Pan and Dual Pan support, and button to change Track's Pan Mode
+  + Pan: Pan Law button  
+  + Automation: Menu in Right click automation panel button
+  + Automation: buttons for Envelopes dialog and toggle envelopes for track buttons
+  # Automation: fix: Touch mode
+  # Automation: switch modes with icon buttons
+  + General Dynamics meter: hold max dB number for x seconds (x=gendyn_max_seconds)
+  # General Dynamics meter: fix: don't display if General Dynamics is bypassed
+  + Notes: Check mark, to set notes done/undone
+  # Notes: Better sorting method allowing notes in same place.
+  # Notes: More compact notes panel if number of notes < notes per page
+  # Meters: Don't display meters if meters area height < 100 pixels
+  + Meters: LUFS and LU scales: EBU+9, EBU+18  
+  + Meters: graphical Loudness Range rectangle
+  + Meters: graphical True Peak Maximum line
+  + Meters: Peak Hold display
+  + Meters: Waveform display. CTRL-Drag left and right to change waveform scale.
+  + Meters: option to insert clip indicator marker when peak over +0.0dB
+  # Tooltips: fix: don't interfere with tooltips ouside Track Inspector window.
+  # Fix: Allow track change with display FXChain on track selection change [postcount=199]
+  + UI: new and improved UI tweaks
+  + UI: display_* global variables to completely hide specific panels
+  
+* v1.0pre7 (2016-04-06)
+  + Tooltips: Enable/Disable tooltips if REAPER >= 5.18
+  + Notes: Track Notes menu, show all tracks notes, show times, set notes per page
+  + Notes: Notes pagination, with buttons or mouse wheel 
+  + Notes: Sort by time or by id
+  + Notes: tooltip with note name if it doesn't fit in window. only REAPER >=5.18
+  + Notes: Click to go to note when showing all tracks notes
+  + Notes: RIGHT click on note to go and edit note text
+    
+* v1.0pre6c (2016-04-04)
+  # fix track notes crash introduced in pre6.
+  
+* v1.0pre6 (2016-04-04)
+  + SHIFT click sends/receives to toggle mute
+  + UI: Configurable font sizes in global options
+  + FXchain panel button right click menu
+  # fix: 5.17+ window position and dock system
+  # fix: sends colors for tracks without color
+  # fix: avoid duplicated track notes numbering
+  # fix: allow moving track notes markers
+  # fix: hide meters panel
+  # UI: more compact spacing minimized panels
+  # fix: better detection of general dynamics Track Inspector
+  # information to configure dpMeter if needed displayed in script console instead of messagebox window.
+  
+* v1.0pre5 (2016-03-31)
+  + Sends presets buttons (Left-click to create send from preset, 
+    CTRL+click to save current track as preset,
+    Right-click to go to preset track, 
+    ALT+click to remove preset)
+  + Select multiple sends/receives to adjust gain (CTRL click to select multiple)
+  + ALT+click on sends/receives to remove them
+  + Double click on sends/receives to reset to +0.0 db
+  + colored sends option
+  + colored fx groups option
+  + show/hide buttons for wet knobs, and fx groups.
+  # fix: refresh FX groups when deleting FX
+  # fix: last touched track when adding fx
+
+* v1.0pre4 (2016-03-21)
+  + Track FX groups (toggle bypass group, toggle float group)
+  + Auto FX group assignment based in FX name options
+  + Hide effects or instruments prefixes option.
+  + Track Automation panel (preliminar design)
+  # wet/dry knob opacity when wet=0
+  # fix: delete selected track crash
+  # fix: delete FX with ALT+click crash
+  # fix: do not create duplicated aux tracks
+  # fix: faders can be used to write automation too. (thanks @mpl)
+  # fix: autocreate aux tracks again if not found when opening new/old projects.
+  
+* v1.0pre3 (2016-03-19)
+  + Post-Fader/Pre-Fader option for meters
+  + Pan label number display %L %R CENTER
+  + some theming options (background color, text1 and text2 color)
+  + button to change RMS Window size
+  # don't show parameters panel for now until implemented
+  # fix: disable master analysis fx when not displaying master
+  # desaturated a bit RMS meters
+  # improved EBUR128 number readings display
+  # improved grid display if meter zone height is smaller
+  
+* v1.0pre2 (2016-03-18)
+  + options for speed mouse on knobs, sends
+  + option for absolute sends drag mode
+  # delete marker notes on exit
+  # delete hidden analysis tracks on exit
+  # middle click and CTRL left click  on Loudness meter to set IL instead of simple click
+  # disable prefx if it is a frozen track
+  # if no selected track, maintain last displayed track instead of nothing
+  # if no selected track before running, display master track.
+  # automatically sets general preference undo on track selection
+  # general dynamics moved to correct folder "dynamics" inside the zip
+  # fix: script path for png icons
+  # fix: font size for OSX
+
+* v1.0pre1 (2016-03-17)
+  + Initial pre-release
+  + Track Notes
+  + Freezer/Unfreezer/Frozen info
+  + FX Chain
+  + Track Delay
+  + Sends
+  + Receives
+  + Pan and volume faders
+  + Pan and volume RMS meters
+  + Loudness EBUR128 meters
+  + PreFX loudness meter
+  + wet/dry controls for each fx
+  + Multiple instances support  
+  + Optional action to always initialize at master track and locked 

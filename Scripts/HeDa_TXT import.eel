@@ -1,0 +1,180 @@
+/**
+ * ReaScript Name: Txt lines to empty items with notes
+ * Description: Creates empty items with notes from the lines in a txt file.
+ * Instructions: 
+ Create and select a track where the items will be created. 
+ Set the cursor position to where you want to insert the items
+ Run the script
+ Select a txt file containing lyrics 
+ Set the time in seconds per character and separator lines if any.
+ * Author: HeDa
+ * Author URl: http://forum.cockos.com/member.php?u=47822
+ * Version: 0.1 beta
+ * Repository: 
+ * Repository URl: 
+ * File URl: http://stash.reaper.fm/23409/HeDa_Txt%20lines%20to%20empty%20items%20with%20notes.eel
+ * License: GPL v3
+ * Forum Thread:
+ * Forum Thread URl: http://forum.cockos.com/showthread.php?t=156239
+ * REAPER: 4.77
+ * Extensions: 
+ */
+ 
+/**
+ * Change log:
+ * v0.2 (2015-03-07)
+	+ if there is a time selection it fits the import length to time selection
+ 
+ * v0.1 (2015-02-25)
+	+ configurable time length per character and separator lines
+
+ */
+
+
+
+///////////// OPTIONS //////////
+
+//////////////////////////////// End of Options
+
+
+// Don't modify below here 
+////////////////////////////////////////////////////////////////////////////////////////////// 
+function SetNote(item,newnote) (
+	GetSetItemState(item, #str="");	
+	match("%s<NOTES?*", #str, #chunk) ? (
+		// there are notes already
+		match("*???IMGRESOURCEFLAGS%s", #str, afternote);
+		strcat(#chunk, "<NOTES\n|");
+		strcat(#chunk, newnote);
+		strcat(#chunk, "\n>\nIMGRESOURCEFLAGS");
+		strcat(#chunk, afternote);
+	) : (
+		//there are still no notes
+		match("%sIID %s", #str, #chunk, #chunk2) ? (
+			
+			strcat(#chunk, "IID ");
+			strcat(#chunk, #chunk2);
+			str_delsub(#chunk,strlen(#chunk)-2,2);
+			strcat(#chunk, "<NOTES\n|");
+			strcat(#chunk, newnote);
+			strcat(#chunk, "\n>\nIMGRESOURCEFLAGS 0\n>");
+
+		);
+	);
+	GetSetItemState(item, #chunk);	
+);
+
+function CalculateTime(notetext)(
+    starttime = endtime;	
+	longline=strlen(notetext)-1;
+
+	longline > 1 ? ( 
+		endtime = starttime + (charlength*longline);
+	) : (
+		// if the line is only 1 character it is a separator line
+		endtime = starttime + (seplength);
+	);
+	//SetEditCurPos(endtime, 1, 0);	// moves cursor for next item
+);
+
+function CreateEmptyItem(notetext,mult) (
+
+	starttime = GetCursorPosition();	
+	longline=strlen(notetext)-1;
+
+	longline > 1 ? ( 
+		endtime = starttime + (charlength*longline*mult);
+	) : (
+		// if the line is only 1 character it is a separator line
+		endtime = starttime + (seplength*mult);
+	);
+
+	longline > 1 ? (
+		GetSet_LoopTimeRange(1,0,starttime,endtime,0);	// define the time range for the empty item
+		Main_OnCommand(40142,0); // insert empty item
+		item = GetSelectedMediaItem(0,0); // get the selected item
+		SetNote(item,notetext); // set the note
+	);
+	
+	SetEditCurPos(endtime, 1, 0);	// moves cursor for next item
+	
+);
+
+function read_lines(file_name)
+(
+
+
+
+GetSet_LoopTimeRange(0, 0, start, end, 0);
+desiredlength=end-start;
+
+desiredlength<0.00001 ? (
+    // no time selection
+	initialcursor = GetCursorPosition();
+	endtime = initialcursor;
+	  (file = fopen(file_name, "r")) ? (	// open the file for reading
+		while(feof(file) == 0) ( // while reading the file
+		  fgets(file, #line); // reads line
+		  CreateEmptyItem(#line,1);  //creates the empty item
+		);
+		fclose(file);	//close the file
+	 );
+ ) : (
+
+    // if there is time selection
+	charlength=0.1;
+	seplength=0.5;
+	initialcursor = start;
+	endtime = start;
+	(file = fopen(file_name, "r")) ? (	// open the file for reading
+		while(feof(file) == 0) ( // while reading the file
+		  fgets(file, #line); // reads line
+		  CalculateTime(#line);  //creates the empty item
+		);
+		fclose(file);	//close the file
+	 );
+	 
+	 firsttrylength=endtime-initialcursor;
+
+	 factor=desiredlength/firsttrylength;
+	 
+	 SetEditCurPos(initialcursor, 0, 0);
+
+	 (file = fopen(file_name, "r")) ? (	// open the file for reading
+		while(feof(file) == 0) ( // while reading the file
+		  fgets(file, #line); // reads line
+		  CreateEmptyItem(#line,factor);  //creates the empty item
+		);
+		fclose(file);	//close the file
+	 );
+	 
+ );
+ GetSet_LoopTimeRange(1, 0, start, end, 1);
+ SetEditCurPos(initialcursor, 0, 0);
+ Main_OnCommand(40289,0); // unselect all items
+	
+);
+ 
+ 
+GetSet_LoopTimeRange(0, 0, start, end, 0);
+desiredlength=end-start;
+
+
+
+// input file
+GetUserFileNameForRead(#filetxt, "Select txt file", "txt");
+
+desiredlength<0.00001 ? (
+// input options
+#dialog_ret_vals = "0.1,0.5"; //default values
+GetUserInputs("Time for each character in seconds?", 2, "Seconds per character:, Seconds per separator line", #dialog_ret_vals);
+match("%f,%f", #dialog_ret_vals, charlength, seplength);
+
+);
+
+// run
+Undo_BeginBlock();
+PreventUIRefresh(1);
+read_lines(#filetxt);
+PreventUIRefresh(-1);
+Undo_EndBlock("import TXT", 0);

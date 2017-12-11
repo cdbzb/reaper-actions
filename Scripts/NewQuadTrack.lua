@@ -1,0 +1,5 @@
+reaper.Main_OnCommand (40001,0)
+ track = reaper.GetSelectedTrack(0,0) 
+reaper.SetMediaTrackInfo_Value(track, "B_PHASE",0)
+reaper.SetMediaTrackInfo_Value(track, "I_NCHAN",4)
+reaper.SetMediaTrackInfo_Value(track, "I_RECINPUT",0)

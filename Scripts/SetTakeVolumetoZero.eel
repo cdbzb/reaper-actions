@@ -1,0 +1,10 @@
+(
+	Undo_BeginBlock();
+		item = GetSelectedMediaItem(0,i);
+		take = GetActiveTake(item);
+		SetMediaItemTakeInfo_Value(take, "D_VOL", 1.0 );
+	
+	UpdateArrange();
+	Undo_EndBlock(#undo, -1);
+);
+

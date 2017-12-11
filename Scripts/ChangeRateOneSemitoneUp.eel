@@ -1,0 +1,28 @@
+(
+	Undo_BeginBlock();
+	ratio = 1/.9439;
+	
+	items = CountSelectedMediaItems(0);
+	i=0;
+	loop(items,
+		item = GetSelectedMediaItem(0,i);
+		take = GetActiveTake(item);
+		length = GetMediaItemInfo_Value(item, "D_LENGTH");
+		rate = GetMediaItemTakeInfo_Value(take, "D_PLAYRATE");
+		
+		// set rate
+rate *= ratio;
+length /= ratio;
+
+		SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", rate);
+		
+			SetMediaItemLength(item, length, 0);
+		i+=1;
+	);
+	
+	UpdateArrange();
+	
+	sprintf(#undo,"Set item rate to %{newRate}g%{#plength}s%{#ppitch}s");
+	Undo_EndBlock(#undo, -1);
+);
+

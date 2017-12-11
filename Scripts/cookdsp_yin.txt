@@ -1,0 +1,41 @@
+// JSFX-CookDSP - yin - manual example
+// (c) Olivier Belanger - 2015 - belangeo@gmail.com
+
+desc:Pitch Follower
+
+import cookdsp.jsfx-inc
+
+slider1:0.2<0,1>Tolerance
+slider2:40<20, 500>Minimum Estimated Frequency
+slider3:1000<500, 5000>Maximum Estimated Frequency
+slider4:1000<20, 5000>Pre-Analysis Lowpass Cutoff
+slider5:1<0,4,1{512,1024,2048,4096,8192}>Window Size
+
+@init
+// Compute the size as a power of two
+size = pow(2, slider5+9);
+// Initializes the pitch follower
+pit.yin(slider1, slider2, slider3, slider4, size);
+// Initializes a simple sawtooth wave
+saw.phasor(0, 0);
+
+@slider
+pit.yin_set_tolerance(slider1);
+pit.yin_set_minfreq(slider2);
+pit.yin_set_maxfreq(slider3);
+pit.yin_set_cutoff(slider4);
+size = pow(2, slider5+9);
+pit.yin_set_size(size);
+
+@sample
+// Analyse mixed channels
+freq = pit.yin_do((spl0+spl1)*0.707);
+// Adjust the sawtooth frequency
+saw.phasor_set_freq(freq);
+// Add the sawtooth to the original signal
+play_state == 1 ? (
+    sig = saw.phasor_do() * 0.5;
+) : (
+    sig = 0.0;
+);
+spl0 += sig; spl1 += sig;

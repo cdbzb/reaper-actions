@@ -1,0 +1,3 @@
+Main_OnCommand( NamedCommandLookup("_S&M_DUMP_CUST_ACTION_LIST"),1);
+Main_OnCommand( NamedCommandLookup("_S&M_DUMP_ACTION_LIST"),1);
+Main_OnCommand( NamedCommandLookup("_S&M_DUMP_SWS_ACTION_LIST"),1);

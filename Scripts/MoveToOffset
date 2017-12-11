@@ -1,0 +1,5 @@
+# move cursor to offset of take
+item = RPR_GetSelectedMediaItem(0,0)
+offset = GetMediaItemTakeInfo_Value(item, "D_STARTOFFS")
+RPR_SetEditCurPos(offset ,1, 0);
+

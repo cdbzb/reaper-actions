@@ -1,0 +1,436 @@
+@import COMP functions.eel
+@import COMPS save new or reset.eel
+@import gfx functions 1.01.eel
+
+ 
+
+function ext_color(key,default)local(temp,val,color)//saves key in reaper-extstate.ini
+(
+  HasExtState(#section, key) ? ( 
+    GetExtState(temp=#, #section, key); match("%i",temp,color); //setcolor(color); 
+  ):(
+    sprintf(val=#,"%i",default); SetExtState(#section, key, val, 1); //setcolor(default);
+    color=default;
+  ); 
+  
+  color; 
+);  
+
+function int_option(key,default,newval,setnewval)local(getvalue,setvalue)//saves key in reaper-extstate.ini
+(
+  getvalue=#; setvalue=#;
+  !HasExtState(#section, key)  ? (
+    sprintf(setvalue,"%i",default);
+    SetExtState(#section, key, setvalue, 1);
+  ); 
+  setnewval ? (
+    sprintf(setvalue,"%i",newval); 
+    SetExtState(#section, key, setvalue, 1);
+    setnewval=0;
+  );
+  HasExtState(#section, key) ? ( 
+    GetExtState(getvalue, #section, key); match("%i",getvalue,val); 
+  );
+ 
+  val;
+);
+
+function ActionBox(str,w,h)instance(trigger)
+(
+  trigger ? trigger=0;
+  gfx_a=1; 
+  edged_grad_h(gfx_x,gfx_y,w,h,field_color,6,.57,.4);
+  setcolor(text_color); gfx_a=.3; 
+  gfx_roundrect(gfx_x-1,gfx_y-1,w,h,2,0,1);
+  mouse_in_rect(gfx_x-1,gfx_y-1,w,h) ? (
+     setcolor(highlight2,1); gfx_roundrect(gfx_x,gfx_y,w-2,h-2,2,0,1);
+     mouse_click(1) ? trigger=1;
+  );   
+  gfx_a=.8;
+  //str=#;
+  gfx_x+=w/2; gfx_y+=h/2-(gfx_texth/2);
+  setcolor(text_color);
+  print_centerjust(str);
+  
+  trigger;
+); 
+
+function GetMediaItem_Comps(item)local(guidstringout,needle,i,baloon,keyout,find)
+//For filter
+//gets a string of all keys for this item (newline seperated)
+(
+  
+  proj=EnumProjects(-1, "");
+  #section="ReaL_Comps";
+  extension_api("BR_GetMediaItemGUID", item, guidStringOut=#);
+  sprintf(needle=#,"*%s*",guidStringOut);
+  i=find=0; #compkeys="";
+  while(EnumProjExtState(proj, #section, i, keyOut=#, baloon=#) ) (
+    match(needle,baloon) ? (
+      #compkeys+=keyout;    
+      #compkeys+="\n";      
+      find+=1;
+    );  
+    i+=1;
+  );
+  !find ? (strcpy(#compkeys,"no comps"); find=1);
+  find;
+);
+
+function GetAllComp_Takes_String2(dolist)local(i,compname,valout,keyout,nameret)
+(
+  dolist ? (
+    i=mempos=fi=0;  compname=#;  #ListAllCompsAndTakes="";
+    sprintf(#needle,"*%s*",#filter);
+    
+    while(EnumProjExtState(proj, #section, i, keyOut=#, valOut=#)  )  ( //enum listings
+      filterCompnamefromkey(keyOut);  //filter to comp name  
+   matchi(#needle,keyout) ? (     
+      stricmp(compname, keyout) || (!fi && !match(keyout,"end\n")) ? (  //is this name different? and not first or last?          
+        strcpy(compname,keyout);           //copy name to compname
+        strcat(#ListAllCompsAndTakes,keyout);
+        strcat(#ListAllCompsAndTakes,"\n");
+        mempos[]=1; mempos+=1;//flag comp 
+        
+      );
+      BreakNewlines_NumberedStrings_limit(valOut,0,1);//only first  break needed
+      //checks for updated take name 
+      take=GetMediaItemTakeByGUID(proj, 0);//string 0 is guid
+      GetTakeName(#nameret, take); //get take name
+      strcat(#ListAllCompsAndTakes,"$");//adds a character - denotes take
+      strcat(#ListAllCompsAndTakes,#nameret);//add take name
+      strcat(#ListAllCompsAndTakes,"\n");//add newline   
+      mempos[]=take;//store MediaItemtake in memory
+      mempos+=1;
+      fi+=1;  
+  );  
+  i+=1;      
+    );     
+  );  
+  fi; //return i (number of states returned)
+);
+
+ 
+ 
+function SelectAllItemsInComp(compname)local(i,name,take,guid,item,keyout,valout)
+(
+    i=0;  //compname=#; 
+    Main_OnCommand( 40289 , 0);  //unselect all items 
+    while(EnumProjExtState(proj, #section, i, keyOut=#, valOut=#)  )  ( //enum listings 
+      //filter compname
+      strcpy(name=#,keyOut);
+      //filterCompnamefromkey(compname);
+      filterCompnamefromkey(name);
+      match(compname,name) ? (
+        //filter take GUID          
+        strcpy(guid=#,valout); FilterStringWithinBraces(guid,1);
+        take=extension_api("SNM_GetMediaItemTakeByGUID", proj, guid); 
+        item=GetMediaItemTake_Item(take);               
+        SetMediaItemSelected(item, 1);
+     );
+     i+=1;   
+  );
+); 
+
+
+  
+function draw_compdisplay()local(init,color,temp,ww,hh,filter,filter_str,i,adjpos,apply,)
+(
+  
+    (GetCurrentProjectInLoadSave() && GetCurrentProjectInLoadSave()!=proj) 
+      || _global.COMPreset || EnumProjects(-1, "")!=proj || !init ? (
+      dolist=1;  runtimes+=1;);
+
+    proj=EnumProjects(-1, "");
+    #section="ReaL_Comps";
+   
+    //dockstate 
+    dockstate!=dcache ? dset=1;
+    dockstate=d.int_option("dockstate",1,dockstate,dset);
+    dcache=dockstate;
+    dockstate=gfx_dock(-1);
+    //zoom scroll on selection change *value stored in -extstate.ini
+    Czoom ? ( zoom=2;);
+    Sview && !Czoom ? zoom=1;
+    !Czoom && !Sview ? zoom=0;
+    zoom != zcache ? set=1:set=0;
+    zoom=z.int_option("Zoom on selection Change",2,zoom,set);
+    
+    //edit cursor move *value stored in -extstate.ini
+    ec!=eccache ? set2=1:set2=0;
+    ec=ec.int_option("Move Edit Cursor on Selection Change",1,ec,set2);
+    
+    
+    width=int_option("display_width",150,gfx_w,gfx_w!=wcache);
+    wcache=gfx_w;
+    height=int_option("display_height",500,gfx_h,gfx_h!=hcache);
+    wcache=gfx_h;
+    
+    //relative position *stored per-project - change does not persist without save
+  !init ? (  
+    GetProjEXTState(proj,"Real_Comps_RelativePositioning","=",rel=#);
+    !strlen(rel) ? (
+      SetProjEXTState(proj,"Real_Comps_RelativePositioning","=",1);
+      _global.COMPSrelativeposition=1; rel_pos=1;
+    ): rel_pos=rel;
+  );        
+    rel_pos!=relcache ? (
+      SetProjEXTState(proj,"Real_Comps_RelativePositioning","=",rel_pos);
+      _global.COMPSrelativeposition=rel_pos;
+      ); 
+    
+    //select items on comp change *value stored in -extstate.ini
+    sel_on!=selcache ? set3=1:set3=0;
+    sel_on=so.int_option("select items on comp change",0,sel_on,set3);
+  
+   
+     
+    
+    
+    setcolor(background_color);   
+    gfx_rect(0,0,gfx_w,gfx_h);   
+    
+    
+    setcolor(field_color);
+    topborder=40; bottomborder=gfx_h-70;
+    gfx_rect(5,topborder,gfx_w-10,bottomborder-topborder);
+    setcolor(outline_color);   
+    gfx_roundrect(5,topborder,gfx_w-10,bottomborder-topborder,0,0);
+    
+    setcolor(text_color);
+    
+    gfx_setfont(2,"Microsoft San-serif",14);
+    gfx_y=45;
+    left=14; gfx_x=left;
+    
+    nextline=gfx_texth+4;   
+    fieldystart=(topborder);
+    fieldyend=fieldystart+(bottomborder-topborder);
+    fieldsize=((fieldyend-fieldystart)/nextline)|=0;
+    
+    //!strlen(#filter) ? #filter="";
+    //#filter="verse";
+    dolist || GetProjectStateChangeCount(proj)!=changecache || strcmp(#fcache,#filter) ? (
+      GetAllComp_Takes_String2(1); 
+      u=0; loop( 1023, strcpy(u,""); u+=1; ); u=0;
+      num_loop=BreakNewlines_NumberedStrings(#ListAllCompsAndTakes,0);
+      //listtimes+=1;
+    ); 
+    
+    //num_loop=BreakNewlines_NumberedStrings(#ListAllCompsAndTakes,0);   
+    changecache=GetProjectStateChangeCount(proj);
+   
+    mouse_wheel<mousewheelcache && string_start+fieldsize<line ? string_start+=1;
+    mouse_wheel>mousewheelcache && string_start>0 ? string_start-=1;
+    mousewheelcache=mouse_wheel;
+    //debugNumberedStrings();
+    gfx_x=left; line=i=0; _flag=1000000; take_mempos=0;
+    
+    //debug.mouse_click_i(61) ? debugNumberedStrings(1);
+    
+    loop( num_loop, 
+    
+    
+      !IsStringPrefix(i,"$") ? (
+        !_flag[i] ? _flag[i]=-1; 
+        collapse=_flag[i];
+        line+=1;
+        gfx_y < fieldyend-gfx_texth && string_start<=line   ? (        
+          gfx_x=left; 
+          collapse==-1 ? gfx_roundrect(gfx_x-2,gfx_y+3,8,2,0,0);
+          collapse==1 ? gfx_roundrect(gfx_x-2,gfx_y+3,8,8,0,0);        
+          collapse=draw_leftjust_toggle("  ",collapse,-1,1);//fakie string
+          _flag[i]=collapse;
+        );
+       
+        gfx_y<fieldyend-gfx_texth && string_start<=line   ? (  //Is in field      
+          gfx_x=left+16;
+          
+          mousein_texth(txt_w(i)+8)  ? (
+            setcolor(highlight1);
+            gfx_rect(gfx_x,gfx_y,txt_w(i)+8,gfx_texth);
+            setcolor(text_color);
+        
+            mouse_click(2) ?  (   //Right Click Selection     
+               
+              SelectAllItemsInComp(i);//select all items in comp on r-click      
+              zoom == 1 ? Main_OnCommand(NamedCommandLookup("_S&M_SCROLL_ITEM"),0);// scroll to view            
+              zoom == 2 ? ( Main_OnCommand(NamedCommandLookup("_SWS_TOGZOOMHORIZ_ITEMS"),0);            
+                !GetToggleCommandState(NamedCommandLookup("_SWS_TOGZOOMHORIZ_ITEMS")) ? 
+                Main_OnCommand(NamedCommandLookup("_SWS_TOGZOOMHORIZ_ITEMS"),0);//zoom to items
+              );          
+              ec ? Main_OnCommand(41173,0);
+            );
+        
+          );
+          apply=print_leftjust_xon_dbl(i,apply,1); //draw comp name
+          //strcpy(lastcompname,i);
+          #CompApply=i;
+          
+          apply ? (
+            sel_on ? strcat(#CompApply,"!s");
+            load_comp(apply,#CompApply); apply=0;  
+          );
+          cr();
+          gfx_x=left+12;            
+        );
+      );
+      //collapse=1;
+      //take names       
+      IsStringPrefix(i,"$")   ? (
+      
+      collapse==1 ? (         
+        take=take_mempos[i];
+        item=GetMediaItemTake_Item(take);
+        line+=1;
+        gfx_y < fieldyend-gfx_texth && string_start<=line  ? (
+          gfx_x=left+20;          
+          //higlight - clickable                      
+          GetMediaItemInfo_Value(item, "B_UISEL") ? (
+            boxw=12;
+            setcolor(0xD8D8D8); gfx_rect(gfx_x-16,gfx_y,boxw,gfx_texth-2); 
+            setcolor(0x999999); gfx_roundrect(gfx_x-16,gfx_y,boxw,gfx_texth-2,0,0);
+          );            
+          setcolor(text_color);
+          GetActiveTake(item)==take ? gfx_circle(gfx_x-10,gfx_y+6,1,1,1);           
+          strcpy_from(#takename,i,1);
+          mousein_texth(txt_w(take_n)+8)   ? (
+            setcolor(highlight1);
+            gfx_rect(gfx_x,gfx_y,txt_w(take_n)+8,gfx_texth);
+            setcolor(text_color);  
+            //Select item on L click                       
+            mouse_click(1)  ? (            
+            //Main_OnCommand( 40289 , 0);  //unselect all items        
+              SetMediaItemSelected(item, 1); 
+              ec ?  Main_OnCommand(41173,0); 
+              zoom == 1 ? Main_OnCommand(NamedCommandLookup("_S&M_SCROLL_ITEM"),0);// scroll to view                       
+            );
+            mouse_click(2)  ? (            
+              Main_OnCommand( 40289 , 0);  //unselect all items        
+              SetMediaItemSelected(item, 1); 
+              ec ?  Main_OnCommand(41173,0); 
+              zoom == 1 ? Main_OnCommand(NamedCommandLookup("_S&M_SCROLL_ITEM"),0);// scroll to view                       
+            );  
+            //set active take to this take        
+            mouse_dblclick(1) ? (
+              SetActiveTake(take);
+              Main_OnCommand( 40289 , 0);  //unselect all items        
+              SetMediaItemSelected(item, 1);              
+            );               
+          );       
+          draw_leftjust(#takename);//draw
+          cr();
+        ); 
+      );                
+      );      
+   i+=1;   
+   );  
+    
+    
+    gfx_setfont(1,"Microsoft San-serif",16);
+    //header
+    //!filter ? filter_str="Filter: All";
+    gfx_y=5;
+    gfx_x=12;
+    //ActionBox("FILTER");
+    draw_leftjust("Filter:"); gfx_x+=6;
+    text_field(#filter,16,field_color);
+    strcpy(#fcache,#filter);
+    
+    gfx_setfont(1,"Microsoft San-serif",12);
+    gfx_x=left; gfx_y+=20;
+    f.ActionBox("clear filter",62,12) ? #filter="";
+    
+    gfx_x=right-62; 
+    s.ActionBox("New Comp",62,12) ? Save_Comp(GetUserComp("Save New or Reset Comp"),#compname):strcpy(#compname,#filter);
+    
+    
+   
+    
+    //gfx_x=max(gfx_w/2 + 10,70); gfx_y=gfx_h-35;
+    //gfx_x|=0;
+    //ActionBox("Options");// ? ;
+    
+    gfx_x=8; gfx_y=22;
+    options=1;
+    options ? (
+      gfx_setfont(2,"Microsoft San-serif",12); 
+      right=gfx_w-20;
+      
+      gfx_x=right-45; gfx_y=gfx_h-gfx_texth-8;
+      draw_rightjust("Scroll View");
+      gfx_x+=2; gfx_y+=1;
+      Sview=Xbox(Sview);
+      gfx_x+=20; gfx_y-=1;
+      
+      gfx_x=right;
+      draw_rightjust("Zoom");
+      gfx_x+=2; gfx_y+=1;
+      Czoom=Xbox(Czoom);
+      
+      
+      zcache=zoom;
+      Czoom ? zoom=2;
+      Sview && !Czoom ? zoom=1;
+      !Czoom && !Sview ? zoom=0;
+      
+      gfx_y-=gfx_texth*1.25;    
+      eccache=ec;
+      gfx_x=right;
+      draw_rightjust("Move Cursor");
+      gfx_x+=2; gfx_y+=1;
+      ec=Xbox(ec);
+      
+      gfx_y-=1;
+      gfx_x=right-txt_w("Move Cursor")-6;
+      draw_rightjust("On Selection:");
+      gfx_x+=6; 
+      
+      gfx_x=right; gfx_y-=gfx_texth*1.25;
+      draw_rightjust("Relative Positioning:");
+      gfx_x+=2; gfx_y+=1;
+      relcache=rel_pos;
+      rel_pos=Xbox(rel_pos);
+      
+      gfx_x=right; gfx_y-=gfx_texth*1.25;
+      draw_rightjust("Select on Comp change:"); 
+      gfx_x+=2; gfx_y+=1;
+      selcache=sel_on;
+      sel_on=Xbox(sel_on);
+    );// end options
+    
+    dolist=0; init=1;    
+    ww=gfx_w; hh=gfx_h;
+    gfx_update();
+    
+    get_action_context("",_AsectionID,_AcmdID,"","","");
+    SetToggleCommandState(_AsectionID,_AcmdID, 1);
+    gfx_getchar() >= 0  ? defer("draw_compdisplay()");
+    
+);    
+
+       
+proj=EnumProjects(-1, "");
+#section="ReaL_Comps";
+dockstate=int_option("dockstate",1,0,0);
+width=int_option("display_width",150,0,0);
+height=int_option("display_height",500,0,0);
+gfx_init("Item Comps", width, height ,dockstate);
+gfx_setfont(1,"Microsoft San-serif",14);     
+background_color=ext_color("background color",0xBBBFBF);     
+field_color=ext_color("field color",0xDCDEDE); 
+outline_color=ext_color("outline color",0x969696);    
+text_color=ext_color("text color",0x040404);
+highlight1=ext_color("highlight1",0x9696BB); 
+highlight2=ext_color("highlight2",0xF0C000);              
+       
+draw_compdisplay();
+
+       //debugNumberedStrings();
+       //!CTdebug ? ( ShowConsoleMsg(#ListAllCompsAndTakes); CTdebug=1;);
+       
+       atexit("SetToggleCommandState(_AsectionID,_AcmdID, 0);
+       RefreshToolbar2(_AsectionID,_AcmdID)");     
+                
+       
+       

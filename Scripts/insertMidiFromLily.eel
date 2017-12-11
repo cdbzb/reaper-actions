@@ -1,0 +1,2 @@
+SetOnlyTrackSelected( GetTrack (0,0) );
+InsertMedia("/tmp/Quartet.mid",0)
